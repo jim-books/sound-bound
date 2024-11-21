@@ -7,27 +7,25 @@
 BLEMIDI_CREATE_INSTANCE("SoundboundTest", MIDI);
 
 // Constants and Parameters
-const float MOTION_START_THRESHOLD = 0.5; // Initial threshold for detecting motion (g), to be adjusted dynamically
-const float MOTION_STOP_THRESHOLD = 0.25; // Initial threshold for detecting hit (g), to be adjusted dynamically
-const float HIT_DECEL_THRESHOLD = 1.0;    // Threshold for detecting hit (g)
-const unsigned long DEBOUNCE_TIME = 200;  // Increased debounce time in milliseconds
-const unsigned long LOOP_INTERVAL = 15;   // Loop interval in milliseconds
-const unsigned long HIT_RELEASE_TIME = 100; // Time to transition back to IDLE after a hit
+const float MOTION_START_THRESHOLD = 0.5;   // Threshold for detecting motion (g), dynamic based on calibration
+const float MOTION_STOP_THRESHOLD = 0.25;   // Threshold for stopping motion detection (g), dynamic based on calibration
+const float HIT_DECEL_THRESHOLD = 1.0;      // Threshold for detecting hit (g)
+const unsigned long DEBOUNCE_TIME = 1;     // Debounce time in milliseconds
+const unsigned long LOOP_INTERVAL = 15;      // Main loop interval in milliseconds
+const unsigned long HIT_RELEASE_TIME = 1;  // Time to transition back to IDLE after a hit (ms)
 
 // MIDI Parameters
 const int MIDI_CHANNEL = 10;              // MIDI channel (1-16)
 const int BASS_NOTE = 36;                 // MIDI note number for bass
-const int SNARE_NOTE = 38;                // MIDI note number for acoustic snare
+const int SNARE_NOTE = 38;                // MIDI note number for snare
 const int VELOCITY_MIN = 30;              // Minimum MIDI velocity
 const int VELOCITY_MAX = 127;             // Maximum MIDI velocity
-const int NOTE_DURATION_MIN = 50;         // Minimum note duration in ms
-const int NOTE_DURATION_MAX = 200;        // Maximum note duration in ms
+const int NOTE_DURATION_MS = 50;          // Fixed note duration in milliseconds
 
 // Variables for Hit Detection
 float previousMagnitude = 0.0;
 bool isMoving = false;
 unsigned long lastHitTime = 0;
-bool isConnected = false;
 
 // State Machine Variables
 enum HitState {
@@ -66,7 +64,8 @@ float filteredAccelZ = 0.0;
 
 // Function Prototypes
 int mapDecelerationToVelocity(float deceleration);
-void sendMIDINoteNonBlocking(int note, int velocity);
+void sendMIDINote(int note, int velocity);
+void calibrateIMU();
 
 void setup() {
   // Initialize Serial Monitor for debugging
@@ -103,21 +102,8 @@ void setup() {
     while (1); // Halt execution
   }
 
-  // Calibration Phase
-  Serial.println("Calibrating...");
-  while (calibrationCount < CALIBRATION_SAMPLES) {
-    imuDataGet(&stAngles, &stGyroRawData, &stAccelRawData, &stMagnRawData);
-    float accelX = stAccelRawData.s16X / 2048.0;
-    float accelY = stAccelRawData.s16Y / 2048.0;
-    float accelZ = stAccelRawData.s16Z / 2048.0;
-    float magnitude = sqrt(pow(accelX, 2) + pow(accelY, 2) + pow(accelZ, 2));
-    baselineMagnitude += magnitude;
-    calibrationCount++;
-    delay(10);
-  }
-  baselineMagnitude /= CALIBRATION_SAMPLES;
-  Serial.print("Calibration complete. Baseline Magnitude: ");
-  Serial.println(baselineMagnitude);
+  // Perform Calibration
+  calibrateIMU();
 
   // Initialize MIDI
   MIDI.begin(MIDI_CHANNEL + 1); // MIDI.begin takes channels 1-16
@@ -126,12 +112,10 @@ void setup() {
   // Initialize BLE-MIDI
   BLEMIDI.setHandleConnected([]() {
     Serial.println("Bluetooth MIDI Client Connected");
-    isConnected = true;
   });
 
   BLEMIDI.setHandleDisconnected([]() {
     Serial.println("Bluetooth MIDI Client Disconnected");
-    isConnected = false;
   });
 
   Serial.println("Setup Complete. System Ready.");
@@ -163,9 +147,22 @@ void loop() {
   // Calculate total acceleration magnitude using filtered values
   float magnitude = sqrt(pow(filteredAccelX, 2) + pow(filteredAccelY, 2) + pow(filteredAccelZ, 2));
 
+  // Debugging: Print current acceleration and magnitude
+  #if DEBUG_MODE
+    Serial.print("Accel X: ");
+    Serial.print(filteredAccelX, 3);
+    Serial.print(" g, Y: ");
+    Serial.print(filteredAccelY, 3);
+    Serial.print(" g, Z: ");
+    Serial.print(filteredAccelZ, 3);
+    Serial.print(" g | Total Accel: ");
+    Serial.print(magnitude, 3);
+    Serial.println(" g");
+  #endif
+
   // Dynamic Thresholds based on Calibration
-  float dynamicMotionStartThreshold = baselineMagnitude + 0.3; // Adjust as needed
-  float dynamicMotionStopThreshold = baselineMagnitude + 0.1;  // Adjust as needed
+  float dynamicMotionStartThreshold = baselineMagnitude + MOTION_START_THRESHOLD; // e.g., baseline + 0.5g
+  float dynamicMotionStopThreshold = baselineMagnitude + MOTION_STOP_THRESHOLD;   // e.g., baseline + 0.25g
 
   // Detect Movement with Hysteresis
   if (magnitude > dynamicMotionStartThreshold) {
@@ -188,7 +185,7 @@ void loop() {
         if (deceleration > HIT_DECEL_THRESHOLD) {
           if (currentTime - lastHitTime > DEBOUNCE_TIME) {
             int velocity = mapDecelerationToVelocity(deceleration);
-            sendMIDINoteNonBlocking(SNARE_NOTE, velocity);
+            sendMIDINote(SNARE_NOTE, velocity);
             lastHitTime = currentTime;
             currentState = HIT_DETECTED;
             stateChangeTime = currentTime;
@@ -229,7 +226,7 @@ void loop() {
 int mapDecelerationToVelocity(float deceleration) {
   // Define adjusted deceleration range based on observed data
   const float DECEL_MIN = 1.0; // Minimum deceleration observed (g)
-  const float DECEL_MAX = 2.5; // Adjusted maximum deceleration (g)
+  const float DECEL_MAX = 2.0; // Adjusted maximum deceleration (g)
 
   // Normalize deceleration between 0 and 1
   float normalizedDecel = (deceleration - DECEL_MIN) / (DECEL_MAX - DECEL_MIN);
@@ -246,12 +243,32 @@ int mapDecelerationToVelocity(float deceleration) {
 }
 
 /**
+ * Calibration Function to determine baseline magnitude.
+ */
+void calibrateIMU() {
+  Serial.println("Calibrating...");
+  while (calibrationCount < CALIBRATION_SAMPLES) {
+    imuDataGet(&stAngles, &stGyroRawData, &stAccelRawData, &stMagnRawData);
+    float accelX = stAccelRawData.s16X / 2048.0;
+    float accelY = stAccelRawData.s16Y / 2048.0;
+    float accelZ = stAccelRawData.s16Z / 2048.0;
+    float magnitude = sqrt(pow(accelX, 2) + pow(accelY, 2) + pow(accelZ, 2));
+    baselineMagnitude += magnitude;
+    calibrationCount++;
+    delay(10); // Ensure consistent timing between samples
+  }
+  baselineMagnitude /= CALIBRATION_SAMPLES;
+  Serial.print("Calibration complete. Baseline Magnitude: ");
+  Serial.println(baselineMagnitude);
+}
+
+/**
  * Sends a MIDI Note On and Note Off message with non-blocking delay.
  * 
  * @param note     MIDI note number (0-127)
  * @param velocity MIDI velocity (0-127)
  */
-void sendMIDINoteNonBlocking(int note, int velocity) {
+void sendMIDINote(int note, int velocity) {
   MIDI.sendNoteOn(note, velocity, MIDI_CHANNEL);
   Serial.print("MIDI Note Sent: ");
   Serial.print(note);
