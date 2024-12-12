@@ -19,7 +19,7 @@ struct AccountView: View {
                 .ignoresSafeArea()
                 
                 VStack {
-                    Text("Account Details Go Here")
+                    Text("Account Details")
                         .navigationTitle("Account")
                 }
                 .padding(.bottom, 80)

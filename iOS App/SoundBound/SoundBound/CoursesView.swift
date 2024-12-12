@@ -19,8 +19,8 @@ struct CoursesView: View {
                 .ignoresSafeArea()
                 
                 VStack {
-                    Text("Courses Details Go Here")
-                        .navigationTitle("Account")
+                    Text("Courses Details")
+                        .navigationTitle("Courses")
                 }
                 .padding(.bottom, 80)
             }

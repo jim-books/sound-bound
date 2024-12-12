@@ -1,18 +1,25 @@
-//
-//  EditPresetView.swift
-//  SoundBound
-//
-//  Created by jimbook on 12/12/2024.
-//
-
 import SwiftUI
+
+// Step 1: Define the Preset struct
+struct Preset: Identifiable {
+    let id = UUID()
+    let name: String
+    let imageName: String
+}
 
 struct EditPresetView: View {
     @Binding var selectedPreset: String
     @State private var showHandSelection = false
     
-    // Example Preset Options
-    let presets = ["Classic", "Jazz", "Rock", "Electronic", "Latin", "HipHop"]
+    // Step 2: Update the presets array with designated images
+    let presets: [Preset] = [
+        Preset(name: "Classic", imageName: "pianokeys.inverse"),
+        Preset(name: "Jazz", imageName: "music.quarternote.3"),
+        Preset(name: "Rock", imageName: "guitars"),
+        Preset(name: "Electronic", imageName: "waveform.path"),
+        Preset(name: "Latin", imageName: "globe.europe.africa.fill"),
+        Preset(name: "HipHop", imageName: "mic")
+    ]
     
     let columns = [
         GridItem(.flexible()),
@@ -23,28 +30,30 @@ struct EditPresetView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(presets, id: \.self) { preset in
+                // Step 3: Modify ForEach to use Preset objects
+                ForEach(presets) { preset in
                     Button(action: {
-                        selectedPreset = preset
+                        selectedPreset = preset.name
                     }) {
                         VStack {
-                            Image(systemName: "square.grid.2x2")
+                            // Use the imageName from Preset
+                            Image(systemName: preset.imageName)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 50, height: 50)
                                 .padding()
-                            Text(preset)
+                            Text(preset.name)
                                 .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
-                        .background(selectedPreset == preset ? Color.orange.opacity(0.2) : Color.orange.opacity(0.1))
+                        .background(selectedPreset == preset.name ? Color.orange.opacity(0.2) : Color.orange.opacity(0.1))
                         .cornerRadius(10)
                     }
                 }
             }
             .padding()
             
-            // Hand Selection Button
+            // Hand Selection Button remains unchanged
             Button(action: {
                 showHandSelection.toggle()
             }) {
@@ -55,7 +64,7 @@ struct EditPresetView: View {
                 }
                 .foregroundColor(.white)
                 .padding()
-                .background(Color.orange)
+                .background(Color(red: 0.38, green: 0.17, blue: 0))
                 .cornerRadius(10)
                 .shadow(radius: 4)
             }
@@ -68,7 +77,11 @@ struct EditPresetView: View {
     }
 }
 
-
-//#Preview {
-//    EditPresetView()
-//}
+// Sample Preview with Binding
+struct EditPresetView_Previews: PreviewProvider {
+    @State static var selectedPreset = "Classic"
+    
+    static var previews: some View {
+        EditPresetView(selectedPreset: $selectedPreset)
+    }
+}

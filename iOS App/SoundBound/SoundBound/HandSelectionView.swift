@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HandSelectionView: View {
     @Environment(\.presentationMode) var presentationMode
-    @State private var selectedHand: String? = nil
+    @State private var selectedHand: String? = "Right"
     
     var body: some View {
         VStack(spacing: 40) {
@@ -17,41 +17,30 @@ struct HandSelectionView: View {
                 .font(.title2)
                 .padding()
             
-            HStack(spacing: 50) {
-                // Left Hand
-                Button(action: {
-                    selectedHand = "Left"
-                    // Handle left-handed selection
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "hand.raised.left.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .foregroundColor(selectedHand == "Left" ? .blue : .gray)
-                        Text("Left")
+            HStack(spacing: 50) { // Adjust spacing as needed
+                // Left Hand Image
+                Image(.left)
+                    .resizable()
+                    .scaledToFit()
+                    .opacity((selectedHand == "Left" ? 1 : 0.3))
+                    .onTapGesture {
+                        selectedHand = "Left"
+                        // Handle left-handed selection
+//                        presentationMode.wrappedValue.dismiss()
                     }
-                }
                 
-                // Right Hand
-                Button(action: {
-                    selectedHand = "Right"
-                    // Handle right-handed selection
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    VStack {
-                        Image(systemName: "hand.raised.right.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
-                            .foregroundColor(selectedHand == "Right" ? .blue : .gray)
-                        Text("Right")
+                // Right Hand Image
+                Image(.right)
+                    .resizable()
+                    .scaledToFit()
+                    .opacity((selectedHand == "Right" ? 1 : 0.3))
+                    .onTapGesture {
+                        selectedHand = "Right"
+                        // Handle right-handed selection
+//                        presentationMode.wrappedValue.dismiss()
                     }
-                }
             }
-            
-            Spacer()
+            .padding(.bottom)
         }
     }
 }

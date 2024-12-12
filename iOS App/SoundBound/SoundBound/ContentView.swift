@@ -12,14 +12,14 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             TabView {
-                CoursesView()
-                    .tabItem {
-                        Label("Courses", systemImage: "book")
-                    }
-                
                 CustomizeView()
                     .tabItem {
                         Label("Customize", systemImage: "paintbrush")
+                    }
+                
+                CoursesView()
+                    .tabItem {
+                        Label("Courses", systemImage: "book")
                     }
                 
                 AccountView()
@@ -54,6 +54,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 #Preview {
     ContentView()
