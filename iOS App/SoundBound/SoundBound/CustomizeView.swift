@@ -34,15 +34,9 @@ struct CustomizeView: View {
     @State private var drumParts: [DrumPart] = [
         DrumPart(name: "Snare",
                  imageName: "snare",
-                 offset: CGPoint(x: 0, y: -100),
+                 offset: CGPoint(x: -75, y: 10),
                  volume: 0.5,
-                 scale: 1.0,
-                 isSelected: false),
-        DrumPart(name: "Bass Drum",
-                 imageName: "bass_drum",
-                 offset: CGPoint(x: 0, y: 100),
-                 volume: 0.5,
-                 scale: 1.2,
+                 scale: 1.55,
                  isSelected: false),
         DrumPart(name: "Hi-Hat",
                  imageName: "hihat",
@@ -51,23 +45,35 @@ struct CustomizeView: View {
                  scale: 1.45,
                  isSelected: false),
         DrumPart(name: "Tom 1",
-                 imageName: "tom1",
-                 offset: CGPoint(x: 80, y: -60),
+                 imageName: "midtom",
+                 offset: CGPoint(x: 35, y: -55),
                  volume: 0.5,
-                 scale: 1.0,
+                 scale: 1.4,
                  isSelected: false),
         DrumPart(name: "Tom 2",
-                 imageName: "tom2",
-                 offset: CGPoint(x: -80, y: 60),
+                 imageName: "hightom",
+                 offset: CGPoint(x: -45, y: -50),
                  volume: 0.5,
-                 scale: 1.0,
+                 scale: 1.45,
+                 isSelected: false),
+        DrumPart(name: "Tom 3",
+                 imageName: "floortom",
+                 offset: CGPoint(x: 75, y: -5),
+                 volume: 0.5,
+                 scale: 1.5,
                  isSelected: false),
         DrumPart(name: "Cymbal",
                  imageName: "cymbal",
-                 offset: CGPoint(x: 80, y: 60),
+                 offset: CGPoint(x: -133, y: -50),
                  volume: 0.5,
-                 scale: 1.1,
-                 isSelected: false)
+                 scale: 2.3,
+                 isSelected: false),
+        DrumPart(name: "Ride",
+                imageName: "ride",
+                offset: CGPoint(x: 140, y: -45),
+                volume: 0.5,
+                 scale: 2.3,
+                isSelected: false)
     ]
     
     var body: some View {
@@ -104,7 +110,7 @@ struct CustomizeView: View {
                                     .offset(x: part.offset.x, y: part.offset.y)
                                     // Highlight if selected
                                     .shadow(color: part.isSelected ? Color.orange : Color.clear, radius: 8)
-//                                    .opacity(part.isSelected ? 1 : 0.001)
+                                    .opacity(part.isSelected ? 1 : 0.001)
                                     .onTapGesture {
                                         toggleSelection(for: part)
                                     }
