@@ -12,7 +12,7 @@ struct AccountView: View {
         NavigationView {
             ZStack{
                 LinearGradient(
-                    gradient: Gradient(colors: [Color.black, Color.orange.opacity(0.7)]),
+                    gradient: Gradient(colors: [Color.black, Color(red: 0.38, green: 0.17, blue: 0)]),
                     startPoint: .top,
                     endPoint: .bottom
                 )

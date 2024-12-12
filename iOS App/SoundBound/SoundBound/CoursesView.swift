@@ -18,12 +18,12 @@ struct CoursesView: View {
                 )
                 .ignoresSafeArea()
                 
-                Text("Courses Content Goes Here")
-                    .navigationTitle("Courses")
-                
-                
+                VStack {
+                    Text("Courses Details Go Here")
+                        .navigationTitle("Account")
+                }
+                .padding(.bottom, 80)
             }
-
         }
     }
 }

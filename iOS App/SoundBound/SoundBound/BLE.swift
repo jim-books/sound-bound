@@ -74,6 +74,12 @@ extension BLEManager: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        
+        guard let name = peripheral.name, !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+            print("Discovered unnamed device; skipping.")
+            return
+        }
+        
         let discoveredPeripheral = DiscoveredPeripheral(peripheral: peripheral, rssi: RSSI)
         
         // Avoid duplicates
