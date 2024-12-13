@@ -9,7 +9,7 @@ BLEMIDI_CREATE_INSTANCE("SoundboundTest", MIDI);
 // Constants and Parameters
 const float MOTION_START_THRESHOLD = 0.4;   // Threshold for detecting motion (g), dynamic based on calibration
 const float MOTION_STOP_THRESHOLD = 0.25;   // Threshold for stopping motion detection (g), dynamic based on calibration
-const float HIT_DECEL_THRESHOLD = 0.8;      // Threshold for detecting hit (g)
+const float HIT_DECEL_THRESHOLD = 0.9;      // Threshold for detecting hit (g)
 const unsigned long DEBOUNCE_TIME = 150;     // Debounce time in milliseconds
 const unsigned long LOOP_INTERVAL = 15;      // Main loop interval in milliseconds
 const unsigned long HIT_RELEASE_TIME = 1;  // Time to transition back to IDLE after a hit (ms)
@@ -171,7 +171,7 @@ void loop() {
 
   if (isMoving) {
     float deceleration = previousMagnitude - magnitude;
-    Serial.println(deceleration, 3);
+    // Serial.println(deceleration, 3);
 
     // Log deceleration for analysis
     // Serial.print("Deceleration: ");
@@ -216,7 +216,7 @@ void loop() {
  */
 int mapDecelerationToVelocity(float deceleration) {
   // Define adjusted deceleration range based on observed data
-  const float DECEL_MIN = 0.8; // Minimum deceleration observed (g)
+  const float DECEL_MIN = 0.9; // Minimum deceleration observed (g)
   const float DECEL_MAX = 2.0; // Adjusted maximum deceleration (g)
 
   // Normalize deceleration between 0 and 1
