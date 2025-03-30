@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Tech Stack: FLutter
+- We must test from the end user(s) perspective, meaning that every test refers to a single or multiple user workflow, we must test the usual cases and the limits.
+- We must strictly follow the module coding design, create reuseable and readable code.
+- Constantly check for the logs of docker to see if there is any error
+- use ; instead of && for command
+- Always update the project structure [project_strcture.md](mdc:project_strcture.md) with the newest updates with details.
+– Avoid having files over 200–300 lines of code. Refactor at that point.
+– Keep the codebase very clean and organized
+– Avoid writing script that is likely only to be run once for testing and other purpose.
+– Never add stubbing or fake data patterns to code that affects the dev or prod environments 
+– Never overwrite my .env file without first asking and confirming
+– Always prefer simple solutions
+– Avoid duplication of code whenever possible, which means checking for other areas of the codebase that might already have similar code and functionality  
+– Write code that takes into account the different environments: dev, test, and prod  
+– You are careful to only make changes that are requested or you are confident are well understood and related to the change being requested  
+– When fixing an issue or bug, do not introduce a new pattern or technology without first exhausting all options for the existing implementation. And if you finally do this, make sure to remove the old implementation afterwards so we don’t have duplicate logic.  

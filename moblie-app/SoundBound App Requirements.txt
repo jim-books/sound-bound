@@ -1,0 +1,363 @@
+Mobile App Detailed Specification Document
+1. Overview
+1.1 Purpose
+To develop a mobile app that enables users to:
+Input and configure personal parameters (e.g., sitting height).
+
+
+Customize a virtual drum kit by repositioning drum elements and individually configuring sound settings.
+
+
+Transmit and receive MIDI signals via Bluetooth between the mobile app and an Arduino-controlled electrical drum system.
+
+
+1.2 Background
+Existing System: An operational electrical drum system is in place.
+
+
+User Experience Goal: Enhance usability by allowing real-time configuration, custom UI interactions, and MIDI signal feedback through a dedicated mobile app.
+
+
+1.3 Technology Stack
+Front-End: Flutter (Dart)
+
+
+Back-End (Optional/Extended Functionality): Python (Flask or FastAPI for API services)
+
+
+Communication: Bluetooth (using packages like flutter_blue)
+
+
+Embedded Device: Arduino board with a Bluetooth module
+
+
+
+2. System Architecture & Design Principles
+2.1 Architectural Overview
+Presentation Layer (Flutter UI):
+
+
+Handles all animations, user inputs, and visual feedback.
+
+
+Consists of multiple screens: sitting height configuration, drum interface customization, and live MIDI signal visualization.
+
+
+Business Logic Layer:
+
+
+Manages state, validation, and the logic for drag-and-drop, configuration pop-ups, and Bluetooth communication.
+
+
+Uses a state management approach (e.g., Provider, BLoC, or Riverpod) to decouple UI from business logic.
+
+
+Data Access/Communication Layer:
+
+
+Encapsulates Bluetooth data transmission/reception.
+
+
+Provides modules for parsing and sending MIDI commands.
+
+
+Optional Back-End Layer (Python):
+
+
+Provides REST APIs for advanced MIDI processing, logging, configuration backup, or remote control functions.
+
+
+2.2 Modular Design & Code Practices
+Separation of Concerns:
+ Each module handles a distinct responsibility (UI, Bluetooth, MIDI, etc.) to allow independent development and testing.
+
+
+Reusability:
+ Common components (e.g., buttons, sliders, dialogs) are built as reusable widgets.
+
+
+Scalability:
+ The architecture anticipates potential expansion, such as adding more drum configurations or remote update capabilities.
+
+
+Error Handling & Logging:
+ Every module implements robust error checking, logging, and user feedback mechanisms.
+
+
+
+3. Detailed Functional Requirements
+3.1 Sitting Height Input Module
+3.1.1 UI/UX Specifications
+Animation Screen:
+
+
+Display a 3D model or high-fidelity animation showing a user seated on a drum chair.
+
+
+Provide clear visual cues (arrows, labels) indicating proper sitting posture.
+
+
+User Prompt:
+
+
+Include a clear instruction: “Please sit on the drum chair as shown and measure your sitting height.”
+
+
+Offer an interactive ruler or a manual input field.
+
+
+3.1.2 Implementation Details
+File: lib/screens/sitting_height_screen.dart
+
+
+Key Widgets:
+
+
+AnimatedSeatingWidget: Displays the animation.
+
+
+SittingHeightInput: A numeric input field or slider.
+
+
+
+State Management:
+ Use a Provider or similar pattern to share the sitting height value across modules.
+
+
+
+3.2 Drum Interface Customization Module
+3.2.1 UI/UX Specifications
+Virtual Drum Kit Screen:
+
+
+Display all drum elements in a clear, scalable layout.
+
+
+Each drum element is draggable; developers should use Flutter’s Draggable and DragTarget widgets.
+
+
+Drum Settings:
+
+
+Each drum icon includes a settings button.
+
+
+Tapping the button brings up a pop-up (modal dialog) to configure:
+
+
+Volume: Implemented as a slider.
+
+
+Sound Filter: Options shown as radio buttons or dropdown selections.
+
+
+3.2.2 Implementation Details
+Files:
+
+
+Main screen: lib/screens/drum_interface_screen.dart
+
+
+Drum widget: lib/widgets/drum_icon.dart
+
+
+Settings dialog: lib/widgets/drum_settings_dialog.dart
+
+
+
+3.3 Bluetooth & MIDI Communication Module
+3.3.1 Bluetooth Communication
+Responsibilities:
+
+
+Connect to the Arduino board via Bluetooth.
+
+
+Transmit configuration data (sitting height, drum positions, individual settings).
+
+
+Listen for responses (success/failure signals) and incoming MIDI signals.
+
+
+Implementation Guidelines:
+
+
+Use the flutter_blue package for scanning, pairing, and data transmission.
+
+
+Define a protocol message structure (e.g., JSON or binary protocol) that includes:
+
+
+command_type: "config_update", "midi_event", etc.
+
+
+payload: a structured object containing the relevant data.
+
+
+File: lib/services/bluetooth_service.dart
+Error Handling & State Feedback:
+
+
+During transmission, display a loading spinner.
+
+
+On receipt of success/failure response, update the UI accordingly.
+
+
+3.3.2 MIDI Signal Processing
+Responsibilities:
+
+
+Parse MIDI signals received via Bluetooth.
+
+
+Map each MIDI signal to a specific drum element.
+
+
+Trigger visual feedback (e.g., highlight the drum icon) when a drum is played.
+
+
+Implementation Guidelines:
+
+
+Create a mapping (e.g., a dictionary) of MIDI note values to drum identifiers.
+
+
+Consider using a dedicated service class to decouple MIDI parsing from the Bluetooth service.
+
+
+File: lib/services/midi_service.dart
+
+
+
+
+4. Code Structure & Directory Layout
+A modular and scalable file structure is essential. Below is an example of how to structure your project directories:
+bash
+CopyEdit
+/project-root
+  ├── /mobile_app                    # Flutter mobile application
+  │    ├── /lib
+  │    │    ├── /screens             # All UI screens (SittingHeightScreen, DrumInterfaceScreen, etc.)
+  │    │    │       sitting_height_screen.dart
+  │    │    │       drum_interface_screen.dart
+  │    │    ├── /widgets             # Reusable UI components (DrumIcon, DrumSettingsDialog, etc.)
+  │    │    │       drum_icon.dart
+  │    │    │       drum_settings_dialog.dart
+  │    │    ├── /models              # Data models (DrumConfig, MidiMessage, etc.)
+  │    │    │       drum_config.dart
+  │    │    ├── /services            # Service classes for business logic
+  │    │    │       bluetooth_service.dart
+  │    │    │       midi_service.dart
+  │    │    └── main.dart           # Entry point of the app
+  │    └── /assets                   # Media files (images, animations, icons)
+  ├── /backend                       
+  │    ├── app.py                    # Main Flask application
+  │    ├── requirements.txt          # Dependencies
+  │    ├── /routes                  # API endpoint definitions
+  │    │       config_routes.py
+  │    │       midi_routes.py
+  │    └── /models                  # Data models for configurations
+  └── /docs                          # Documentation and diagrams
+       ├── architecture_diagram.png
+       └── sequence_diagram.png
+
+
+5. Integration & Testing Strategy
+5.1 Unit Testing & Integration Testing
+Flutter Testing:
+
+
+Write unit tests for each service (e.g., BluetoothService, MidiService) using the Flutter testing framework.
+
+
+Use widget tests for UI components, ensuring that the drag-and-drop and pop-up interactions work as expected.
+
+
+
+Bluetooth and Hardware Integration:
+
+
+Create test cases to simulate Bluetooth connectivity issues.
+
+
+Log all incoming and outgoing messages for easier debugging.
+
+
+Use mock objects for unit testing communication logic.
+
+
+5.2 Error Handling & Logging
+Error Handling:
+
+
+Each module should catch exceptions and provide meaningful error messages.
+
+
+Use try-catch blocks around Bluetooth transmissions and data parsing routines.
+
+
+Logging:
+
+
+Integrate a logging framework (e.g., logger package in Flutter or Python’s logging module) to record events, errors, and state transitions.
+
+
+Ensure sensitive information is never logged.
+
+
+5.3 Continuous Integration (CI)
+Version Control:
+ Use Git with branching strategies (e.g., feature branches, pull requests, code reviews).
+
+
+CI/CD Pipeline:
+ Consider using services like GitHub Actions or GitLab CI to run automated tests and linting tools on every commit.
+
+
+
+6. Best Practices & Additional Considerations
+6.1 Modular Code Practices
+DRY Principle:
+ Reuse code by modularizing common functionality (e.g., Bluetooth communication, state updates).
+
+
+SOLID Principles:
+
+
+Single Responsibility: Each class/module should have one responsibility.
+
+
+Open/Closed: Modules should be extendable without modifying existing code.
+
+
+Documentation:
+ Inline comments and docstrings should be used to explain complex logic. Maintain a separate README and inline code documentation.
+
+
+6.2 Security & Performance
+Security:
+
+
+Secure Bluetooth communication (authentication, encrypted channels where possible).
+
+
+Validate all incoming data on both the mobile app and any back-end services.
+
+
+Performance:
+
+
+Optimize animations and UI updates to ensure smooth user experiences.
+
+
+Use asynchronous programming models to prevent UI freezes during Bluetooth communications.
+
+
+6.3 Code Reviews & Collaboration
+Peer Reviews:
+ Establish regular code reviews to ensure adherence to coding standards.
+
+
+Documentation Updates:
+ Maintain the specification document alongside code changes to ensure it remains an up-to-date reference for all developers.
